@@ -4,7 +4,7 @@ from math import ceil
 phone_number = os.environ["SIGNAL_PHONE_NUMBER"]
 
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.connect("/var/run/signald/signald.sock")
+sock.connect(os.environ["SIGNALD_FILE"])
 
 
 def render_latex(eq):
