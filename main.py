@@ -9,9 +9,9 @@ sock.connect(os.environ["SIGNALD_FILE"])
 
 def render_latex(eq):
     eq = eq.replace("\n", "")
-    temp_name = "/tmp/latex_render." + str(random.randint(1, 2**32)) + ".png"
+    temp_name = "/tmp/latex_renders/" + str(random.randint(0, 2**32)) + ".png"
     os.system(
-        "timeout 2s pnglatex -m 5 -p \"amsmath,amsfonts,amssymb,mathdots,mathtools,mhchem,stackrel,stmaryrd,xypic\" -e displaymath -d 500 -f " +
+        "timeout 2s pnglatex -m 5 -p \"amsmath,amsfonts,amssymb,mathdots,mathtools,stackrel,xypic\" -e displaymath -d 500 -f " +
         json.dumps(eq) +
         " -o " +
         temp_name)
