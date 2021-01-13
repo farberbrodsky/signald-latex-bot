@@ -1,4 +1,4 @@
-import socket, json, os, random
+import socket, json, os, random, subprocess
 from math import ceil
 
 phone_number = os.environ["SIGNAL_PHONE_NUMBER"]
@@ -6,16 +6,16 @@ phone_number = os.environ["SIGNAL_PHONE_NUMBER"]
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 sock.connect(os.environ["SIGNALD_FILE"])
 
-
+os.system("mkdir -p /tmp/latex-renders/")
 def render_latex(eq):
-    eq = eq.replace("\n", "")
     temp_name = "/tmp/latex-renders/" + str(random.randint(0, 2**32)) + ".png"
-    os.system(
-        "timeout 2s pnglatex -m 5 -p \"amsmath,amsfonts,amssymb,mathdots,mathtools,stackrel,xypic\" -e displaymath -d 500 -f " +
-        json.dumps(eq) +
-        " -o " +
-        temp_name)
-    return temp_name
+    try:
+        result = subprocess.run(["pnglatex", "-m", "6", "-p", "amsmath,amsfonts,amssymb,mathdots,mathtools,stackrel,xypic", "-e", "displaymath", "-d", "500", "-f", eq, "-o", temp_name], timeout=2, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            return None, f"status code {result.returncode}:\n{result.stderr.decode('utf-8')}"
+    except subprocess.TimeoutExpired:
+        return None, "Timeout expired."
+    return temp_name, None
 
 
 def send_signal_data(data):
@@ -58,10 +58,14 @@ def got_signal_message(body, source, full_data):
         equations = body["body"].split("$$")
         for i in range(1, len(equations), 2):
             eq = equations[i]
-            temp_name = render_latex(eq)
-            send_signal_message(attachments=[{
-                "filename": temp_name
-            }], reply_message_obj=full_data)
+            temp_name, render_err = render_latex(eq)
+            print(temp_name, render_err)
+            if render_err != None:
+                send_signal_message(body=render_err, reply_message_obj=full_data)
+            else:
+                send_signal_message(attachments=[{
+                    "filename": temp_name
+                }], reply_message_obj=full_data)
 
 
 buff = b""
