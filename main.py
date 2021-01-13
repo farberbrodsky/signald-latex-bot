@@ -1,8 +1,4 @@
-import socket
-import json
-import os
-import random
-import pylab as plt
+import socket, json, os, random
 from math import ceil
 
 phone_number = os.environ["SIGNAL_PHONE_NUMBER"]
